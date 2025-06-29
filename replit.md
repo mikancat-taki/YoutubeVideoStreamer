@@ -85,6 +85,11 @@ This is a modern YouTube video player application that supports multiple URL for
 ```
 Changelog:
 - June 29, 2025. Initial setup
+- June 29, 2025. Added download functionality with yt-dlp integration
+  * Added downloads table to schema
+  * Created download API endpoints for video info and download management
+  * Implemented DownloadModal component with format selection
+  * Added one-click download capability to video player
 ```
 
 ## User Preferences

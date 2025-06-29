@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Share, Download, Play, Video } from "lucide-react";
 import { sampleVideos } from "@/lib/youtube";
+import { DownloadModal } from "./download-modal";
 
 interface VideoPlayerProps {
   videoId: string | null;
@@ -9,6 +11,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ videoId, loading, onSampleVideoSelect }: VideoPlayerProps) {
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   if (loading) {
     return (
       <div className="rounded-2xl p-8 fade-in" style={{ backgroundColor: "var(--youtube-gray)" }}>
@@ -110,17 +113,27 @@ export function VideoPlayer({ videoId, loading, onSampleVideoSelect }: VideoPlay
           </Button>
           <Button
             variant="ghost"
+            onClick={() => setIsDownloadModalOpen(true)}
             className="px-4 py-2 rounded-lg text-sm transition-colors duration-200"
             style={{ 
-              backgroundColor: "var(--youtube-light-gray)",
-              color: "var(--youtube-text)"
+              backgroundColor: "var(--youtube-red)",
+              color: "white"
             }}
           >
             <Download className="w-4 h-4 mr-2" />
-            Download
+            ダウンロード
           </Button>
         </div>
       </div>
+      
+      {/* Download Modal */}
+      {videoId && (
+        <DownloadModal
+          isOpen={isDownloadModalOpen}
+          onClose={() => setIsDownloadModalOpen(false)}
+          videoId={videoId}
+        />
+      )}
     </div>
   );
 }
