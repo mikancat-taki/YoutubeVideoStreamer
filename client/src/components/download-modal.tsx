@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
@@ -95,10 +95,18 @@ export function DownloadModal({ isOpen, onClose, videoId }: DownloadModalProps) 
       const a = document.createElement('a');
       a.href = url;
       a.download = `${videoInfo?.title || videoId}.mp4`;
+      a.style.display = 'none';
+      
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Clean up after a short delay
+      setTimeout(() => {
+        if (a.parentNode === document.body) {
+          document.body.removeChild(a);
+        }
+        window.URL.revokeObjectURL(url);
+      }, 100);
     } catch (error) {
       console.error('Download error:', error);
     }
@@ -119,6 +127,9 @@ export function DownloadModal({ isOpen, onClose, videoId }: DownloadModalProps) 
             <Download className="w-5 h-5 mr-2" />
             動画をダウンロード
           </DialogTitle>
+          <DialogDescription style={{ color: "var(--youtube-text-secondary)" }}>
+            お好みの品質を選択してYouTube動画をダウンロードできます
+          </DialogDescription>
         </DialogHeader>
 
         {loadingInfo ? (

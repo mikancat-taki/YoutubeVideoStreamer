@@ -21,28 +21,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { videoId } = req.params;
       
-      // Use yt-dlp to get video information
-      const { stdout } = await execAsync(
-        `yt-dlp --print-json "https://www.youtube.com/watch?v=${videoId}"`
-      );
+      // Validate video ID format
+      if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+        return res.status(400).json({ error: "Invalid video ID format" });
+      }
       
-      const videoInfo = JSON.parse(stdout);
+      // Use yt-dlp to get video information with timeout
+      const command = `timeout 30s yt-dlp --no-warnings --print-json "https://www.youtube.com/watch?v=${videoId}"`;
+      const { stdout, stderr } = await execAsync(command);
+      
+      if (!stdout.trim()) {
+        throw new Error("No video information received");
+      }
+      
+      const videoInfo = JSON.parse(stdout.trim());
+      
+      // Filter and process formats
+      const mp4Formats = videoInfo.formats?.filter((f: any) => 
+        f.ext === 'mp4' && f.vcodec !== 'none' && f.acodec !== 'none'
+      ) || [];
+      
+      const processedFormats = mp4Formats.map((f: any) => ({
+        format_id: f.format_id,
+        ext: f.ext,
+        quality: f.height ? `${f.height}p` : (f.format_note || 'unknown'),
+        filesize: f.filesize || 0
+      })).slice(0, 5); // Limit to 5 formats
       
       res.json({
-        title: videoInfo.title,
-        duration: videoInfo.duration,
-        description: videoInfo.description,
-        thumbnail: videoInfo.thumbnail,
-        formats: videoInfo.formats?.filter((f: any) => f.ext === 'mp4').map((f: any) => ({
-          format_id: f.format_id,
-          ext: f.ext,
-          quality: f.height ? `${f.height}p` : f.format_note,
-          filesize: f.filesize
-        })) || []
+        title: videoInfo.title || 'Unknown Title',
+        duration: videoInfo.duration || 0,
+        description: videoInfo.description || '',
+        thumbnail: videoInfo.thumbnail || '',
+        formats: processedFormats
       });
     } catch (error) {
       console.error("Error getting video info:", error);
-      res.status(400).json({ error: "Failed to get video information" });
+      res.status(400).json({ 
+        error: "Failed to get video information. Please check if the video exists and is public." 
+      });
     }
   });
 
